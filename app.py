@@ -78,6 +78,7 @@ def test_breeds():
         timeout=5
     )
     return jsonify(response.json()[:2])  # just show first 2 breeds
+
 @app.route("/")
 def index():
     return render_template("index.html")

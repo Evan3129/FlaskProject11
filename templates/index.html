@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeployHub Dog App</title>
+    <title> Welcome </title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
         <header class="site-header">
-            <h1>DeployHub</h1>
+            <h1>DawgDex</h1>
             <p class="subtitle">Dog Image Integration Service</p>
             <nav class="nav">
                 <a href="/">Home</a>
-                <a href="/dogs-page">Breed Explorer</a>
                 <a href="/dogs-page">Breed Explorer</a>
                 <a href="/saved">Show Saved</a>
             </nav>
@@ -28,35 +27,46 @@
         {% endwith %}
 
         <main>
-            <div class="hero-grid">
-                <section class="card hero-card">
-                    <h2>Welcome to DeployHub</h2>
-                    <p>This application connects to TheDogAPI and retrieves dog images and breed information. Browse random breeds, save your favourites, and view saved records.</p>
-                    <div class="hero-actions">
-                        <a class="button-link" href="/dogs-page">Breed Explorer</a>
-                        <a class="button-link" href="/save_dogs">Save Current Dogs</a>
-                        <a class="button-link secondary" href="/saved">Show Saved Dogs</a>
-                    </div>
-                </section>
+            <section class="card hero-card">
+                <h2>Welcome to DawgDex</h2>
+                <p> DawgDex is a dog breed discovery app powered by TheDogAPI. Explore random breeds, search for a specific breed, view detailed stats, and save your dogs!</p>
 
-                <section class="card stats-card">
-                    <h2>Quick Stats</h2>
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <span class="stat-number">🐾</span>
-                            <span class="stat-label">TheDogAPI</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="stat-number">🐶</span>
-                            <span class="stat-label">Breed Explorer</span>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div>
+                            <strong>Browse Random Breeds</strong>
+                            <p>Head to the Breed Explorer to discover 6 randomly selected dog breeds pulled live from TheDogAPI.</p>
                         </div>
                     </div>
-                </section>
-            </div>
+                    <div class="feature-item">
+                        <div>
+                            <strong>View Breed Details</strong>
+                            <p>Click on any dog to see detailed stats including breed group, origin, temperament, life span, height and weight.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div>
+                            <strong>Save Your Favourites</strong>
+                            <p>Save individual dogs from the Breed Explorer to your personal saved collection.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div>
+                            <strong>View Saved Dogs</strong>
+                            <p>Browse all previously saved dogs in one place, with the option to delete any you no longer want.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-actions">
+                    <a class="button-link" href="/dogs-page">Breed Explorer</a>
+                    <a class="button-link secondary" href="/saved">Show Saved Dogs</a>
+                </div>
+            </section>
         </main>
 
         <footer class="site-footer">
-            <p>IS2209 DeployHub Project</p>
+            <p>IS2209 DawgDex Project</p>
         </footer>
     </div>
 </body>
