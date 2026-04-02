@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Dog Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+            <h1>Saved Dog Records</h1>
+            <p class="subtitle">Dog data stored in the database</p>
+
+            <nav class="nav">
+                <a href="/">Home</a>
+                <a href="/dogs-page">Dog Dashboard</a>
+                <a href="/saved">Refresh Saved</a>
+            </nav>
+        </header>
+
+        <main>
+            <section class="card">
+                <h2>Saved Data</h2>
+
+                {% if saved_dogs %}
+                    <div class="saved-grid">
+                        {% for row in saved_dogs %}
+                            <div class="dog-box">
+                                <img src="{{ row.image_url }}" alt="Saved dog image" class="dog-image">
+                                <h3>{{ row.breed_name }}</h3>
+                                <p><strong>Saved At:</strong> {{ row.saved_at }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No saved dog records found.</p>
+                {% endif %}
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <p>IS2209 DeployHub Project</p>
+        </footer>
+    </div>
+</body>
+</html>

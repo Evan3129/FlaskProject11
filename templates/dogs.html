@@ -3,44 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeployHub Dog App</title>
+    <title>Dog Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
         <header class="site-header">
-            <h1>DeployHub</h1>
-            <p class="subtitle">Dog Image Integration Service</p>
+            <h1>Dog Dashboard</h1>
+            <p class="subtitle">Formatted output from TheDogAPI</p>
 
             <nav class="nav">
                 <a href="/">Home</a>
                 <a href="/dogs-page">Dog Dashboard</a>
+                <a href="/dogs" target="_blank">Raw JSON</a>
                 <a href="/save_dogs">Save Dogs</a>
                 <a href="/saved">Show Saved</a>
             </nav>
         </header>
 
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="flash-message">
-                    {% for message in messages %}
-                        <p>{{ message }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
         <main>
             <section class="card">
-                <h2>Overview</h2>
-                <p>
-                    This application connects to TheDogAPI and retrieves dog images
-                    and breed information. Users can save dog data and view saved records.
-                </p>
-            </section>
-
-            <section class="card">
-                <h2>Live Dog Data</h2>
+                <h2>Current Dog Results</h2>
 
                 {% if error %}
                     <p class="error">{{ error.error }}</p>
@@ -59,10 +42,9 @@
             </section>
 
             <section class="card actions">
-                <h2>Actions</h2>
-                <a class="button-link" href="/dogs-page">Open Dog Dashboard</a>
-                <a class="button-link secondary" href="/dogs" target="_blank">Open Raw JSON</a>
+                <h2>Quick Actions</h2>
                 <a class="button-link" href="/save_dogs">Save Current Dogs</a>
+                <a class="button-link secondary" href="/dogs" target="_blank">View Raw JSON</a>
                 <a class="button-link secondary" href="/saved">Show Saved Dogs</a>
             </section>
         </main>
