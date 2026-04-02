@@ -15,3 +15,5 @@ def test_graceful_degradation_on_upstream_failure(client):
     # Should return a meaningful error message, not crash silently
     if response.status_code != 200:
         assert "error" in data
+
+

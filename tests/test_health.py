@@ -29,3 +29,7 @@ def test_status_endpoint_reports_database_and_api(client):
     assert "database" in data
     assert "api" in data
     assert data["app"] == "running"
+
+
+
+

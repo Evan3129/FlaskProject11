@@ -44,3 +44,5 @@ def test_returns_joined_result_when_both_sources_available(client):
     assert "breed_name" in first
     assert "image_url" in first
     assert "breed_group" in first
+
+
