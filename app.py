@@ -30,7 +30,7 @@ def init_db():
         """)
         conn.commit()
 
-#test comment to try n get push working
+
 def fetch_dog_data(limit=6):
     if not API_KEY:
         return None, {"error": "Missing THEDOG_API_KEY. Add it to your .env file."}
@@ -78,7 +78,6 @@ def test_breeds():
         timeout=5
     )
     return jsonify(response.json()[:2])  # just show first 2 breeds
-
 @app.route("/")
 def index():
     return render_template("index.html")
