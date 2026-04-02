@@ -26,7 +26,6 @@ MOCK_BREEDS = [
 
 
 def test_returns_joined_result_when_both_sources_available(client):
-    """As a user, I can retrieve a consolidated resource from two sources."""
     mock_response = MagicMock()
     mock_response.json.return_value = MOCK_BREEDS * 10
     mock_response.status_code = 200

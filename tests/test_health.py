@@ -11,7 +11,6 @@ def test_health_endpoint_reports_dependencies(client):
 
 
 def test_status_endpoint_reports_database_and_api(client):
-    """As an operator, /status reports the state of the database and external API."""
     mock_response = MagicMock()
     mock_response.status_code = 200
 

@@ -3,7 +3,6 @@ import requests as req
 
 
 def test_graceful_degradation_on_upstream_failure(client):
-    """As a user, if the external API is down, I get a meaningful error or cached data."""
     with patch("app.requests.get", side_effect=req.RequestException("API unavailable")):
         with patch("app.API_KEY", "fake-key"):
             response = client.get("/dogs")

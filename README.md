@@ -1,19 +1,13 @@
-#  Dog Breed Explorer
+# Dog Breed Explorer
+### IS2209 DeployHub Project
 
-A Flask web application that lets users browse, search, and save dog breeds using [The Dog API](https://thedogapi.com/). Breed data is persisted in a PostgreSQL database.
+**Live URL:** https://flaskproject11-xnta.onrender.com/
 
 ---
 
-## Features
+## Overview
 
-- Browse 6 randomly selected dog breeds on each visit
-- Search for breeds by name
-- View detailed breed info (group, origin, temperament, life span, height, weight)
-- Save favourite breeds to a PostgreSQL database
-- Delete saved breeds
-- `/health` and `/status` endpoints for monitoring
-- Dockerised for easy deployment
-- CI/CD pipeline via GitHub Actions
+A Flask web application that allows users to browse, search, and save dog breeds. Breed data is fetched from The Dog API and persisted in a PostgreSQL database hosted on Supabase.
 
 ---
 
@@ -23,7 +17,7 @@ A Flask web application that lets users browse, search, and save dog breeds usin
 |---|---|
 | Backend | Python / Flask |
 | Database | PostgreSQL (psycopg) |
-| External API | [The Dog API](https://thedogapi.com/) |
+| External API | The Dog API |
 | Environment | python-dotenv |
 | Containerisation | Docker |
 | CI/CD | GitHub Actions |
@@ -60,12 +54,12 @@ FlaskProject11/
 
 ---
 
-## Getting Started
+## Setup Instructions
 
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
+git clone <https://github.com/Evan3129/FlaskProject11>
 cd FlaskProject11
 ```
 
@@ -75,41 +69,36 @@ cd FlaskProject11
 pip install -r requirements.txt
 ```
 
-### 3. Set up environment variables
+### 3. Configure environment variables
 
-Copy the example env file and fill in your values:
-
-```bash
-cp .env.example .env
-```
+Create a `.env` file in the project root using `.env.example` as a template:
 
 ```env
-FLASK_APP=app.py
-FLASK_ENV=development
 SECRET_KEY=your_secret_key
 THEDOG_API_KEY=your_dog_api_key
 DATABASE_URL=your_postgresql_connection_string
 ```
 
-- Get a free API key at [thedogapi.com](https://thedogapi.com/)
-- `DATABASE_URL` should be a valid PostgreSQL connection string (e.g. from Supabase)
-
-### 4. Run the app
+### 4. Run the application
 
 ```bash
 flask run
 ```
 
-The app will be available at `http://127.0.0.1:5000`
+The app will be available locally at `http://127.0.0.1:5000`
+
+Or visit the live deployment at https://flaskproject11-xnta.onrender.com/
 
 ---
 
-## Running with Docker
+## Features
 
-```bash
-docker build -t dog-breed-explorer .
-docker run -p 5000:5000 --env-file .env dog-breed-explorer
-```
+- Browse 6 randomly selected dog breeds on each visit
+- Search for breeds by name
+- View detailed breed info (group, origin, temperament, life span, height, weight)
+- Save favourite breeds to a PostgreSQL database
+- Delete saved breeds
+- `/health` and `/status` endpoints for monitoring
 
 ---
 
@@ -136,7 +125,7 @@ pip install pytest
 pytest -v
 ```
 
-### Test coverage
+### Test Coverage
 
 | File | Test |
 |---|---|
@@ -147,25 +136,19 @@ pytest -v
 
 ---
 
-## CI/CD
+## CI/CD Pipeline
 
-GitHub Actions runs automatically on every pull request:
-- Linting
-- All pytest tests
-- Blocks merge on failure
+GitHub Actions is configured to run automatically on every pull request. The pipeline will:
+- Run all pytest tests
+- Block merging if any tests fail
 
 Pipeline config: `.github/workflows/ci.yml`
 
 ---
 
-## Requirements
+## Docker
 
+```bash
+docker build -t dog-breed-explorer .
+docker run -p 5000:5000 --env-file .env dog-breed-explorer
 ```
-flask
-psycopg[binary]
-requests
-python-dotenv
-```
-
-
-
