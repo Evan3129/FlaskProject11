@@ -25,6 +25,13 @@ def init_db():
                 id SERIAL PRIMARY KEY,
                 image_url TEXT NOT NULL,
                 breed_name TEXT,
+                breed_group TEXT,
+                origin TEXT,
+                temperament TEXT,
+                life_span TEXT,
+                height TEXT,
+                weight TEXT,
+                description TEXT,
                 saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -70,6 +77,43 @@ def fetch_dog_data(limit=6):
     except requests.RequestException as e:
         return None, {"error": "Failed to contact dog service", "details": str(e)}
 
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"}), 200
+
+
+@app.route("/status")
+def status():
+    status_data = {
+        "app": "running",
+        "database": "unknown",
+        "api": "unknown"
+    }
+
+    try:
+        with get_db_connection() as conn:
+            conn.execute("SELECT 1")
+        status_data["database"] = "connected"
+    except Exception as e:
+        status_data["database"] = f"error: {str(e)}"
+
+    try:
+        response = requests.get(
+            "https://api.thedogapi.com/v1/breeds",
+            headers={"x-api-key": API_KEY},
+            timeout=5
+        )
+        if response.status_code == 200:
+            status_data["api"] = "reachable"
+        else:
+            status_data["api"] = f"error: {response.status_code}"
+    except Exception as e:
+        status_data["api"] = f"error: {str(e)}"
+
+    return jsonify(status_data), 200
+
+
 @app.route("/test_breeds")
 def test_breeds():
     response = requests.get(
@@ -77,7 +121,9 @@ def test_breeds():
         headers={"x-api-key": API_KEY},
         timeout=5
     )
-    return jsonify(response.json()[:2])  # just show first 2 breeds
+    return jsonify(response.json()[:2])
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -128,6 +174,8 @@ def search():
 
     except requests.RequestException as e:
         return render_template("dogs.html", dog_data=None, error={"error": str(e)}, query=query)
+
+
 @app.route("/dogs-page")
 def dogs_page():
     dog_data, error = fetch_dog_data()
@@ -188,6 +236,7 @@ def saved():
 
     return render_template("saved.html", saved_dogs=saved_dogs)
 
+
 @app.route("/delete_dog/<int:dog_id>")
 def delete_dog(dog_id):
     with get_db_connection() as conn:
@@ -195,6 +244,7 @@ def delete_dog(dog_id):
         conn.commit()
     flash("Dog deleted successfully.")
     return redirect(url_for("saved"))
+
 
 if __name__ == "__main__":
     init_db()
