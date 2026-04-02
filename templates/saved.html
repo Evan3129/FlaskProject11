@@ -11,25 +11,42 @@
         <header class="site-header">
             <h1>Saved Dog Records</h1>
             <p class="subtitle">Dog data stored in the database</p>
-
             <nav class="nav">
                 <a href="/">Home</a>
-                <a href="/dogs-page">Dog Dashboard</a>
+                <a href="/dogs-page">Breed Explorer</a>
                 <a href="/saved">Refresh Saved</a>
             </nav>
         </header>
 
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-message">
+                    <p>{{ messages[-1] }}</p>
+                </div>
+            {% endif %}
+        {% endwith %}
+
         <main>
             <section class="card">
-                <h2>Saved Data</h2>
+                <h2>Saved Dogs</h2>
 
                 {% if saved_dogs %}
                     <div class="saved-grid">
                         {% for row in saved_dogs %}
-                            <div class="dog-box">
-                                <img src="{{ row.image_url }}" alt="Saved dog image" class="dog-image">
+                            <div class="dog-box"
+                                data-image="{{ row.image_url }}"
+                                data-name="{{ row.breed_name }}"
+                                data-group="{{ row.breed_group }}"
+                                data-origin="{{ row.origin }}"
+                                data-temperament="{{ row.temperament }}"
+                                data-lifespan="{{ row.life_span }}"
+                                data-height="{{ row.height }}"
+                                data-weight="{{ row.weight }}"
+                                data-description="{{ row.description }}">
+                                <img src="{{ row.image_url }}" alt="{{ row.breed_name }}" class="dog-image">
                                 <h3>{{ row.breed_name }}</h3>
-                                <p><strong>Saved At:</strong> {{ row.saved_at }}</p>
+                                <a href="/delete_dog/{{ row.id }}" class="button-link secondary delete-btn"
+                                   onclick="event.stopPropagation(); return confirm('Delete this dog?')">Delete</a>
                             </div>
                         {% endfor %}
                     </div>
@@ -43,5 +60,55 @@
             <p>IS2209 DeployHub Project</p>
         </footer>
     </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <img id="modalImage" src="" alt="Dog">
+            <div class="modal-body">
+                <h2 id="modalName"></h2>
+                <table>
+                    <tr><td>Breed Group</td><td id="modalGroup"></td></tr>
+                    <tr><td>Origin</td><td id="modalOrigin"></td></tr>
+                    <tr><td>Temperament</td><td id="modalTemperament"></td></tr>
+                    <tr><td>Life Span</td><td id="modalLifeSpan"></td></tr>
+                    <tr><td>Height</td><td id="modalHeight"></td></tr>
+                    <tr><td>Weight</td><td id="modalWeight"></td></tr>
+                    <tr><td>Description</td><td id="modalDescription"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.dog-box').forEach(function(box) {
+            box.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') return;
+                document.getElementById('modalImage').src = this.dataset.image;
+                document.getElementById('modalName').textContent = this.dataset.name;
+                document.getElementById('modalGroup').textContent = this.dataset.group;
+                document.getElementById('modalOrigin').textContent = this.dataset.origin;
+                document.getElementById('modalTemperament').textContent = this.dataset.temperament;
+                document.getElementById('modalLifeSpan').textContent = this.dataset.lifespan;
+                document.getElementById('modalHeight').textContent = this.dataset.height + ' cm';
+                document.getElementById('modalWeight').textContent = this.dataset.weight + ' kg';
+                document.getElementById('modalDescription').textContent = this.dataset.description;
+                document.getElementById('modalOverlay').classList.add('active');
+            });
+        });
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
 </body>
 </html>

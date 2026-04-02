@@ -3,48 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dog Dashboard</title>
+    <title>Breed Explorer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
         <header class="site-header">
-            <h1>Dog Dashboard</h1>
+            <h1>Breed Explorer</h1>
             <p class="subtitle">Formatted output from TheDogAPI</p>
-
             <nav class="nav">
                 <a href="/">Home</a>
-                <a href="/dogs-page">Dog Dashboard</a>
-                <a href="/dogs" target="_blank">Raw JSON</a>
-                <a href="/save_dogs">Save Dogs</a>
+                <a href="/dogs-page">Breed Explorer</a>
                 <a href="/saved">Show Saved</a>
             </nav>
         </header>
 
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-message">
+                    <p>{{ messages[-1] }}</p>
+                </div>
+            {% endif %}
+        {% endwith %}
+
         <main>
             <section class="card">
-                <h2>Current Dog Results</h2>
+                <h2>Search Breeds</h2>
+                <form action="/search" method="get" class="search-form">
+                    <input type="text" name="q" placeholder="Search for a breed e.g. Labrador"
+                        value="{{ query if query else '' }}" class="search-input">
+                    <button type="submit" class="button-link">Search</button>
+                    {% if query %}
+                        <a href="/dogs-page" class="button-link secondary">Clear</a>
+                    {% endif %}
+                </form>
+            </section>
+
+            <section class="card">
+                <h2>{% if query %}Results for "{{ query }}"{% else %}Current Dog Results{% endif %}</h2>
 
                 {% if error %}
                     <p class="error">{{ error.error }}</p>
                 {% elif dog_data %}
                     <div class="dog-grid">
                         {% for item in dog_data %}
-                            <div class="dog-box">
-                                <img src="{{ item.image_url }}" alt="Dog image" class="dog-image">
+                            <div class="dog-box"
+                                data-image="{{ item.image_url }}"
+                                data-name="{{ item.breed_name }}"
+                                data-group="{{ item.breed_group }}"
+                                data-origin="{{ item.origin }}"
+                                data-temperament="{{ item.temperament }}"
+                                data-lifespan="{{ item.life_span }}"
+                                data-height="{{ item.height }}"
+                                data-weight="{{ item.weight }}"
+                                data-description="{{ item.description }}">
+                                <img src="{{ item.image_url }}" alt="{{ item.breed_name }}" class="dog-image">
                                 <h3>{{ item.breed_name }}</h3>
+                                <form action="/save_dog" method="post" onclick="event.stopPropagation()">
+                                    <input type="hidden" name="image_url" value="{{ item.image_url }}">
+                                    <input type="hidden" name="breed_name" value="{{ item.breed_name }}">
+                                    <input type="hidden" name="breed_group" value="{{ item.breed_group }}">
+                                    <input type="hidden" name="origin" value="{{ item.origin }}">
+                                    <input type="hidden" name="temperament" value="{{ item.temperament }}">
+                                    <input type="hidden" name="life_span" value="{{ item.life_span }}">
+                                    <input type="hidden" name="height" value="{{ item.height }}">
+                                    <input type="hidden" name="weight" value="{{ item.weight }}">
+                                    <input type="hidden" name="description" value="{{ item.description }}">
+                                    <button type="submit" class="button-link save-btn">Save</button>
+                                </form>
                             </div>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p>No dog data available.</p>
+                    <p>No breeds found{% if query %} for "{{ query }}"{% endif %}.</p>
                 {% endif %}
             </section>
 
             <section class="card actions">
                 <h2>Quick Actions</h2>
-                <a class="button-link" href="/save_dogs">Save Current Dogs</a>
-                <a class="button-link secondary" href="/dogs" target="_blank">View Raw JSON</a>
                 <a class="button-link secondary" href="/saved">Show Saved Dogs</a>
             </section>
         </main>
@@ -53,5 +89,55 @@
             <p>IS2209 DeployHub Project</p>
         </footer>
     </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <img id="modalImage" src="" alt="Dog">
+            <div class="modal-body">
+                <h2 id="modalName"></h2>
+                <table>
+                    <tr><td>Breed Group</td><td id="modalGroup"></td></tr>
+                    <tr><td>Origin</td><td id="modalOrigin"></td></tr>
+                    <tr><td>Temperament</td><td id="modalTemperament"></td></tr>
+                    <tr><td>Life Span</td><td id="modalLifeSpan"></td></tr>
+                    <tr><td>Height</td><td id="modalHeight"></td></tr>
+                    <tr><td>Weight</td><td id="modalWeight"></td></tr>
+                    <tr><td>Description</td><td id="modalDescription"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.dog-box').forEach(function(box) {
+            box.addEventListener('click', function(e) {
+                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+                document.getElementById('modalImage').src = this.dataset.image;
+                document.getElementById('modalName').textContent = this.dataset.name;
+                document.getElementById('modalGroup').textContent = this.dataset.group;
+                document.getElementById('modalOrigin').textContent = this.dataset.origin;
+                document.getElementById('modalTemperament').textContent = this.dataset.temperament;
+                document.getElementById('modalLifeSpan').textContent = this.dataset.lifespan;
+                document.getElementById('modalHeight').textContent = this.dataset.height + ' cm';
+                document.getElementById('modalWeight').textContent = this.dataset.weight + ' kg';
+                document.getElementById('modalDescription').textContent = this.dataset.description;
+                document.getElementById('modalOverlay').classList.add('active');
+            });
+        });
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
 </body>
 </html>

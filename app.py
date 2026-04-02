@@ -1,7 +1,7 @@
 import os
-import sqlite3
 import requests
-from flask import Flask, jsonify, render_template, redirect, url_for, flash
+import psycopg
+from flask import Flask, jsonify, render_template, redirect, url_for, flash, request
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,77 +10,77 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_key")
 
 API_KEY = os.getenv("THEDOG_API_KEY")
-DOG_URL = "https://api.thedogapi.com/v1/images/search"
-DATABASE = "dogs.db"
+DOG_URL = "https://api.thedogapi.com/v1/images/search?has_breeds=1"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return psycopg.connect(DATABASE_URL)
 
 
 def init_db():
-    conn = get_db_connection()
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS saved_dogs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            image_url TEXT NOT NULL,
-            breed_name TEXT,
-            saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-    conn.close()
+    with get_db_connection() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS saved_dogs (
+                id SERIAL PRIMARY KEY,
+                image_url TEXT NOT NULL,
+                breed_name TEXT,
+                saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
 
 
 def fetch_dog_data(limit=6):
     if not API_KEY:
-        return None, {
-            "error": "Missing THEDOG_API_KEY. Add it to your .env file."
-        }
+        return None, {"error": "Missing THEDOG_API_KEY. Add it to your .env file."}
 
     try:
-        response = requests.get(
-            DOG_URL,
+        breeds_response = requests.get(
+            "https://api.thedogapi.com/v1/breeds",
             headers={"x-api-key": API_KEY},
-            params={"limit": limit, "has_breeds": 1},
             timeout=5
         )
+        breeds_data = breeds_response.json()
 
-        data = response.json()
-
-        if response.status_code != 200:
-            return None, {
-                "error": "Dog API error",
-                "api_response": data
-            }
+        import random
+        selected = random.sample(breeds_data, min(limit, len(breeds_data)))
 
         results = []
+        for breed in selected:
+            image_url = None
+            if breed.get("image") and breed["image"].get("url"):
+                image_url = breed["image"]["url"]
 
-        for item in data:
-            breed_name = "Unknown Breed"
-            if item.get("breeds") and len(item["breeds"]) > 0:
-                breed_name = item["breeds"][0].get("name", "Unknown Breed")
-
-            results.append({
-                "image_url": item.get("url"),
-                "breed_name": breed_name
-            })
+            if image_url:
+                results.append({
+                    "image_url": image_url,
+                    "breed_name": breed["name"],
+                    "breed_group": breed.get("breed_group", "Unknown"),
+                    "origin": breed.get("origin", "Unknown"),
+                    "temperament": breed.get("temperament", "Unknown"),
+                    "life_span": breed.get("life_span", "Unknown"),
+                    "description": breed.get("description", ""),
+                    "height": breed.get("height", {}).get("metric", "Unknown"),
+                    "weight": breed.get("weight", {}).get("metric", "Unknown"),
+                })
 
         return results, None
 
     except requests.RequestException as e:
-        return None, {
-            "error": "Failed to contact dog service",
-            "details": str(e)
-        }
+        return None, {"error": "Failed to contact dog service", "details": str(e)}
 
-
+@app.route("/test_breeds")
+def test_breeds():
+    response = requests.get(
+        "https://api.thedogapi.com/v1/breeds",
+        headers={"x-api-key": API_KEY},
+        timeout=5
+    )
+    return jsonify(response.json()[:2])  # just show first 2 breeds
 @app.route("/")
 def index():
-    dog_data, error = fetch_dog_data()
-    return render_template("index.html", dog_data=dog_data, error=error)
+    return render_template("index.html")
 
 
 @app.route("/dogs")
@@ -93,49 +93,108 @@ def dogs():
     return jsonify(dog_data)
 
 
+@app.route("/search")
+def search():
+    query = request.args.get("q", "").lower()
+
+    try:
+        breeds_response = requests.get(
+            "https://api.thedogapi.com/v1/breeds",
+            headers={"x-api-key": API_KEY},
+            timeout=5
+        )
+        breeds_data = breeds_response.json()
+
+        results = []
+        for breed in breeds_data:
+            if query in breed["name"].lower():
+                image_url = None
+                if breed.get("image") and breed["image"].get("url"):
+                    image_url = breed["image"]["url"]
+                if image_url:
+                    results.append({
+                        "image_url": image_url,
+                        "breed_name": breed["name"],
+                        "breed_group": breed.get("breed_group", "Unknown"),
+                        "origin": breed.get("origin", "Unknown"),
+                        "temperament": breed.get("temperament", "Unknown"),
+                        "life_span": breed.get("life_span", "Unknown"),
+                        "description": breed.get("description", ""),
+                        "height": breed.get("height", {}).get("metric", "Unknown"),
+                        "weight": breed.get("weight", {}).get("metric", "Unknown"),
+                    })
+
+        return render_template("dogs.html", dog_data=results, error=None, query=query)
+
+    except requests.RequestException as e:
+        return render_template("dogs.html", dog_data=None, error={"error": str(e)}, query=query)
 @app.route("/dogs-page")
 def dogs_page():
     dog_data, error = fetch_dog_data()
     return render_template("dogs.html", dog_data=dog_data, error=error)
 
 
-@app.route("/save_dogs")
-def save_dogs():
-    dog_data, error = fetch_dog_data()
+@app.route("/save_dog", methods=["POST"])
+def save_dog():
+    image_url = request.form.get("image_url")
+    breed_name = request.form.get("breed_name")
+    breed_group = request.form.get("breed_group")
+    origin = request.form.get("origin")
+    temperament = request.form.get("temperament")
+    life_span = request.form.get("life_span")
+    height = request.form.get("height")
+    weight = request.form.get("weight")
+    description = request.form.get("description")
 
-    if error:
-        flash("Could not save dog data. API key is missing or invalid.")
-        return redirect(url_for("index"))
+    if not image_url or not breed_name:
+        flash("Missing dog data.")
+        return redirect(request.referrer or url_for("dogs_page"))
 
-    conn = get_db_connection()
-
-    for item in dog_data:
+    with get_db_connection() as conn:
         conn.execute("""
-            INSERT INTO saved_dogs (image_url, breed_name)
-            VALUES (?, ?)
-        """, (
-            item["image_url"],
-            item["breed_name"]
-        ))
+            INSERT INTO saved_dogs (image_url, breed_name, breed_group, origin, temperament, life_span, height, weight, description)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (image_url, breed_name, breed_group, origin, temperament, life_span, height, weight, description))
+        conn.commit()
 
-    conn.commit()
-    conn.close()
-
-    flash("Dog data saved successfully.")
-    return redirect(url_for("index"))
+    flash(f"{breed_name} saved successfully!")
+    return redirect(request.referrer or url_for("dogs_page"))
 
 
 @app.route("/saved")
 def saved():
-    conn = get_db_connection()
-    saved_dogs = conn.execute("""
-        SELECT * FROM saved_dogs
-        ORDER BY saved_at DESC
-    """).fetchall()
-    conn.close()
+    with get_db_connection() as conn:
+        rows = conn.execute("""
+            SELECT id, image_url, breed_name, breed_group, origin, temperament, life_span, height, weight, description
+            FROM saved_dogs
+            ORDER BY saved_at DESC
+        """).fetchall()
+
+    saved_dogs = [
+        {
+            "id": row[0],
+            "image_url": row[1],
+            "breed_name": row[2],
+            "breed_group": row[3],
+            "origin": row[4],
+            "temperament": row[5],
+            "life_span": row[6],
+            "height": row[7],
+            "weight": row[8],
+            "description": row[9]
+        }
+        for row in rows
+    ]
 
     return render_template("saved.html", saved_dogs=saved_dogs)
 
+@app.route("/delete_dog/<int:dog_id>")
+def delete_dog(dog_id):
+    with get_db_connection() as conn:
+        conn.execute("DELETE FROM saved_dogs WHERE id = %s", (dog_id,))
+        conn.commit()
+    flash("Dog deleted successfully.")
+    return redirect(url_for("saved"))
 
 if __name__ == "__main__":
     init_db()
