@@ -11,11 +11,10 @@
         <header class="site-header">
             <h1>DeployHub</h1>
             <p class="subtitle">Dog Image Integration Service</p>
-
             <nav class="nav">
                 <a href="/">Home</a>
-                <a href="/dogs-page">Dog Dashboard</a>
-                <a href="/save_dogs">Save Dogs</a>
+                <a href="/dogs-page">Breed Explorer</a>
+                <a href="/dogs-page">Breed Explorer</a>
                 <a href="/saved">Show Saved</a>
             </nav>
         </header>
@@ -23,48 +22,37 @@
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 <div class="flash-message">
-                    {% for message in messages %}
-                        <p>{{ message }}</p>
-                    {% endfor %}
+                    <p>{{ messages[-1] }}</p>
                 </div>
             {% endif %}
         {% endwith %}
 
         <main>
-            <section class="card">
-                <h2>Overview</h2>
-                <p>
-                    This application connects to TheDogAPI and retrieves dog images
-                    and breed information. Users can save dog data and view saved records.
-                </p>
-            </section>
-
-            <section class="card">
-                <h2>Live Dog Data</h2>
-
-                {% if error %}
-                    <p class="error">{{ error.error }}</p>
-                {% elif dog_data %}
-                    <div class="dog-grid">
-                        {% for item in dog_data %}
-                            <div class="dog-box">
-                                <img src="{{ item.image_url }}" alt="Dog image" class="dog-image">
-                                <h3>{{ item.breed_name }}</h3>
-                            </div>
-                        {% endfor %}
+            <div class="hero-grid">
+                <section class="card hero-card">
+                    <h2>Welcome to DeployHub</h2>
+                    <p>This application connects to TheDogAPI and retrieves dog images and breed information. Browse random breeds, save your favourites, and view saved records.</p>
+                    <div class="hero-actions">
+                        <a class="button-link" href="/dogs-page">Breed Explorer</a>
+                        <a class="button-link" href="/save_dogs">Save Current Dogs</a>
+                        <a class="button-link secondary" href="/saved">Show Saved Dogs</a>
                     </div>
-                {% else %}
-                    <p>No dog data available.</p>
-                {% endif %}
-            </section>
+                </section>
 
-            <section class="card actions">
-                <h2>Actions</h2>
-                <a class="button-link" href="/dogs-page">Open Dog Dashboard</a>
-                <a class="button-link secondary" href="/dogs" target="_blank">Open Raw JSON</a>
-                <a class="button-link" href="/save_dogs">Save Current Dogs</a>
-                <a class="button-link secondary" href="/saved">Show Saved Dogs</a>
-            </section>
+                <section class="card stats-card">
+                    <h2>Quick Stats</h2>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-number">🐾</span>
+                            <span class="stat-label">TheDogAPI</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-number">🐶</span>
+                            <span class="stat-label">Breed Explorer</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </main>
 
         <footer class="site-footer">
