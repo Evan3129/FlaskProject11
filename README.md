@@ -168,6 +168,7 @@ The app logs every request to stdout with a unique request ID and response time:
 If the Dog API is unavailable the app retries 3 times with back-off (1s, 2s, 4s) before returning an error.
 
 The `/status` endpoint reports live database and API connectivity.
+
 ---
 
 ## Docker

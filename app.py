@@ -104,6 +104,8 @@ def fetch_dog_data(limit=6):
     return None, {"error": "Failed to contact dog service after retries", "details": "Max retries exceeded"}
 
 
+
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"}), 200
