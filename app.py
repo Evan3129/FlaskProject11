@@ -1,7 +1,10 @@
 import os
+import time
+import uuid
+import logging
 import requests
 import psycopg
-from flask import Flask, jsonify, render_template, redirect, url_for, flash, request
+from flask import Flask, jsonify, render_template, redirect, url_for, flash, request, g
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,10 +12,27 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_key")
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 API_KEY = os.getenv("THEDOG_API_KEY")
 DOG_URL = "https://api.thedogapi.com/v1/images/search?has_breeds=1"
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+@app.before_request
+def start_timer():
+    g.start = time.time()
+    g.request_id = str(uuid.uuid4())[:8]
+    logger.info(f"request_id={g.request_id} method={request.method} path={request.path}")
+
+@app.after_request
+def log_request(response):
+    duration = round((time.time() - g.start) * 1000, 2)
+    logger.info(f"request_id={g.request_id} status={response.status_code} duration={duration}ms")
+    return response
 
 def get_db_connection():
     return psycopg.connect(DATABASE_URL)
@@ -42,40 +62,46 @@ def fetch_dog_data(limit=6):
     if not API_KEY:
         return None, {"error": "Missing THEDOG_API_KEY. Add it to your .env file."}
 
-    try:
-        breeds_response = requests.get(
-            "https://api.thedogapi.com/v1/breeds",
-            headers={"x-api-key": API_KEY},
-            timeout=5
-        )
-        breeds_data = breeds_response.json()
+    retries = 3
+    for attempt in range(retries):
+        try:
+            breeds_response = requests.get(
+                "https://api.thedogapi.com/v1/breeds",
+                headers={"x-api-key": API_KEY},
+                timeout=5
+            )
+            breeds_data = breeds_response.json()
 
-        import random
-        selected = random.sample(breeds_data, min(limit, len(breeds_data)))
+            import random
+            selected = random.sample(breeds_data, min(limit, len(breeds_data)))
 
-        results = []
-        for breed in selected:
-            image_url = None
-            if breed.get("image") and breed["image"].get("url"):
-                image_url = breed["image"]["url"]
+            results = []
+            for breed in selected:
+                image_url = None
+                if breed.get("image") and breed["image"].get("url"):
+                    image_url = breed["image"]["url"]
 
-            if image_url:
-                results.append({
-                    "image_url": image_url,
-                    "breed_name": breed["name"],
-                    "breed_group": breed.get("breed_group", "Unknown"),
-                    "origin": breed.get("origin", "Unknown"),
-                    "temperament": breed.get("temperament", "Unknown"),
-                    "life_span": breed.get("life_span", "Unknown"),
-                    "description": breed.get("description", ""),
-                    "height": breed.get("height", {}).get("metric", "Unknown"),
-                    "weight": breed.get("weight", {}).get("metric", "Unknown"),
-                })
+                if image_url:
+                    results.append({
+                        "image_url": image_url,
+                        "breed_name": breed["name"],
+                        "breed_group": breed.get("breed_group", "Unknown"),
+                        "origin": breed.get("origin", "Unknown"),
+                        "temperament": breed.get("temperament", "Unknown"),
+                        "life_span": breed.get("life_span", "Unknown"),
+                        "description": breed.get("description", ""),
+                        "height": breed.get("height", {}).get("metric", "Unknown"),
+                        "weight": breed.get("weight", {}).get("metric", "Unknown"),
+                    })
 
-        return results, None
+            return results, None
 
-    except requests.RequestException as e:
-        return None, {"error": "Failed to contact dog service", "details": str(e)}
+        except requests.RequestException as e:
+            wait = 2 ** attempt
+            logger.warning(f"API attempt {attempt + 1} failed: {e}. Retrying in {wait}s...")
+            time.sleep(wait)
+
+    return None, {"error": "Failed to contact dog service after retries", "details": "Max retries exceeded"}
 
 
 @app.route("/health")

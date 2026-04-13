@@ -2,6 +2,19 @@
 ### IS2209 DeployHub Project
 
 **Live URL:** https://flaskproject11-xnta.onrender.com/
+**GitHub Repo:** https://github.com/Evan3129/FlaskProject11
+
+---
+
+## Group Information
+
+**Group Number:** Group 29
+
+| Name | Student Number  |
+|---|-----------------|
+| Jack Hanley| 124322031       |
+| Evan O'Toole| 124357173       |
+| Shane Hartnett | 124376781       |
 
 ---
 
@@ -99,6 +112,8 @@ Or visit the live deployment at https://flaskproject11-xnta.onrender.com/
 - Save favourite breeds to a PostgreSQL database
 - Delete saved breeds
 - `/health` and `/status` endpoints for monitoring
+- Structured logging with request IDs and timing on every request
+- Retry/back-off logic when the Dog API is unavailable
 
 ---
 
@@ -144,6 +159,15 @@ GitHub Actions is configured to run automatically on every pull request. The pip
 
 Pipeline config: `.github/workflows/ci.yml`
 
+---
+
+## Observability
+
+The app logs every request to stdout with a unique request ID and response time:
+
+If the Dog API is unavailable the app retries 3 times with back-off (1s, 2s, 4s) before returning an error.
+
+The `/status` endpoint reports live database and API connectivity.
 ---
 
 ## Docker
